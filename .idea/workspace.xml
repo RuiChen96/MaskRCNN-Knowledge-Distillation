@@ -2,11 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f54c2586-38f4-4c61-9ea5-81f17afdac13" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/model/region_proposal_network.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/model/utils/bbox_tool.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/Faster-R-CNN-PyTorch.iml" afterPath="$PROJECT_DIR$/.idea/Faster-R-CNN-PyTorch.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model/utils/bbox_tool.py" afterPath="$PROJECT_DIR$/model/utils/bbox_tool.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -44,8 +40,8 @@
       <file leaf-file-name="bbox_tool.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/model/utils/bbox_tool.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="95">
-              <caret line="5" column="8" lean-forward="true" selection-start-line="5" selection-start-column="8" selection-end-line="5" selection-end-column="8" />
+            <state relative-caret-position="361">
+              <caret line="19" column="6" lean-forward="false" selection-start-line="19" selection-start-column="6" selection-end-line="19" selection-end-column="6" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -69,8 +65,8 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/model/faster_r_cnn.py" />
-        <option value="$PROJECT_DIR$/model/utils/bbox_tool.py" />
         <option value="$PROJECT_DIR$/model/region_proposal_network.py" />
+        <option value="$PROJECT_DIR$/model/utils/bbox_tool.py" />
       </list>
     </option>
   </component>
@@ -220,8 +216,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/model/utils/bbox_tool.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="95">
-          <caret line="5" column="8" lean-forward="true" selection-start-line="5" selection-start-column="8" selection-end-line="5" selection-end-column="8" />
+        <state relative-caret-position="361">
+          <caret line="19" column="6" lean-forward="false" selection-start-line="19" selection-start-column="6" selection-end-line="19" selection-end-column="6" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
           </folding>
