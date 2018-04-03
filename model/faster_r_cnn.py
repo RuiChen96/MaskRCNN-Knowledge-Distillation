@@ -27,5 +27,17 @@ class FasterRCNN(nn.Module):
         # number of classes, including the background.
         return self.head.num_class
 
-    def forward(self, *input):
-        
+    def forward(self, x, scale = 1.):
+
+        # x is input image, I guess
+        img_size = x.shape[2:]
+        # h is feature map, I guess
+        h = self.extractor(x)
+        # rpn receive [h, img_size and scale]
+        # rpn produce [rpn_locs, rpn_scores, rois, roi_indices, anchor]
+        rpn_locs, rpn_scores, rois, roi_indices, anchor = self.rpn(h, img_size, scale)
+        # head receive [h, rois (from rpn), roi_indices (from rpn)]
+        # head produce [roi_cls_locs, roi_scores]
+        roi_cls_locs, roi_scores = self.head(h, rois, roi_indices)
+
+        return roi_cls_locs, roi_scores, rois, roi_indices
