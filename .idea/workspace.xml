@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f54c2586-38f4-4c61-9ea5-81f17afdac13" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model/faster_r_cnn.py" afterPath="$PROJECT_DIR$/model/faster_r_cnn.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/model/utils/bbox_tool.py" afterPath="$PROJECT_DIR$/model/utils/bbox_tool.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -13,11 +14,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="faster_r_cnn.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="faster_r_cnn.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/model/faster_r_cnn.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="715">
-              <caret line="42" column="58" lean-forward="false" selection-start-line="42" selection-start-column="58" selection-end-line="42" selection-end-column="58" />
+            <state relative-caret-position="734">
+              <caret line="61" column="79" lean-forward="true" selection-start-line="61" selection-start-column="79" selection-end-line="61" selection-end-column="79" />
               <folding>
                 <element signature="e#0#12#0" expanded="true" />
               </folding>
@@ -37,11 +38,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="bbox_tool.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="bbox_tool.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/model/utils/bbox_tool.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="361">
-              <caret line="19" column="6" lean-forward="false" selection-start-line="19" selection-start-column="6" selection-end-line="19" selection-end-column="6" />
+              <caret line="19" column="5" lean-forward="false" selection-start-line="19" selection-start-column="5" selection-end-line="19" selection-end-column="5" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -64,9 +65,9 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/model/faster_r_cnn.py" />
         <option value="$PROJECT_DIR$/model/region_proposal_network.py" />
         <option value="$PROJECT_DIR$/model/utils/bbox_tool.py" />
+        <option value="$PROJECT_DIR$/model/faster_r_cnn.py" />
       </list>
     </option>
   </component>
@@ -194,16 +195,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/model/faster_r_cnn.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="715">
-          <caret line="42" column="58" lean-forward="false" selection-start-line="42" selection-start-column="58" selection-end-line="42" selection-end-column="58" />
-          <folding>
-            <element signature="e#0#12#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/model/region_proposal_network.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="114">
@@ -217,9 +208,19 @@
     <entry file="file://$PROJECT_DIR$/model/utils/bbox_tool.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="361">
-          <caret line="19" column="6" lean-forward="false" selection-start-line="19" selection-start-column="6" selection-end-line="19" selection-end-column="6" />
+          <caret line="19" column="5" lean-forward="false" selection-start-line="19" selection-start-column="5" selection-end-line="19" selection-end-column="5" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/model/faster_r_cnn.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="734">
+          <caret line="61" column="79" lean-forward="true" selection-start-line="61" selection-start-column="79" selection-end-line="61" selection-end-column="79" />
+          <folding>
+            <element signature="e#0#12#0" expanded="true" />
           </folding>
         </state>
       </provider>

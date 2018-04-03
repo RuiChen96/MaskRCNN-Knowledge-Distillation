@@ -17,4 +17,4 @@ def generate_anchor_base(base_size = 16, ratios = [0.5, 1, 2],
 
     py = base_size / 2.
     px = base_size / 2.
-    # 
+    #

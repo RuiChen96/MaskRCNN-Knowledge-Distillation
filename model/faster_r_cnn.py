@@ -41,3 +41,22 @@ class FasterRCNN(nn.Module):
         roi_cls_locs, roi_scores = self.head(h, rois, roi_indices)
 
         return roi_cls_locs, roi_scores, rois, roi_indices
+
+    def use_preset(self, preset):
+
+        if preset == 'visualize':
+            self.nms_threshold = 0.3
+            self.score_threshold = 0.7
+        elif preset == 'evaluate':
+            self.nms_threshold = 0.3
+            self.score_threshold = 0.05
+        else:
+            raise ValueError('preset must be visualize or evaluate')
+
+    def _suppress(self, raw_cls_bbox, raw_prob):
+        bbox = list()
+        label = list()
+        score = list()
+        # skip cls_id = 0, because 0 stands for background class.
+        for l in range(1, self.num_class):
+            cls_bbox_l = raw_cls_bbox.reshape((-1, self.num_class, 4))[:, l, :]
