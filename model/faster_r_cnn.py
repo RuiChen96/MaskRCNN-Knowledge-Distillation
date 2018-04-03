@@ -1,9 +1,12 @@
 import torch
 import torchvision
 import numpy as np
+import cupy as cp
 
 from torch import nn
 from torch.nn import functional as F
+
+from model.utils.nms import non_maximum_suppression
 
 class FasterRCNN(nn.Module):
 
@@ -60,3 +63,11 @@ class FasterRCNN(nn.Module):
         # skip cls_id = 0, because 0 stands for background class.
         for l in range(1, self.num_class):
             cls_bbox_l = raw_cls_bbox.reshape((-1, self.num_class, 4))[:, l, :]
+            # reshape -1 ???
+            prob_l = raw_prob[:, l]
+            #
+            mask = prob_l > self.score_threshold
+            #
+            cls_bbox_l = cls_bbox_l[mask]
+            prob_l = prob_l[mask]
+            #
