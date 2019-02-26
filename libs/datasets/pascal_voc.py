@@ -24,3 +24,10 @@ from libs.layers.data_layer import data_layer_keep_aspect_ratio, \
 def unique_boxes():
     pass
 
+if __name__ == '__main__':
+    cfg.data_dir = './data/pascal_voc/'
+    d = pascal_voc('trainval', '0712')
+    res = d.roidb
+    from IPython import embed
+
+    embed()
