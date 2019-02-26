@@ -64,3 +64,35 @@ class imdb(object):
     @property
     def cache_path(self):
         cache_path = osp.abspath(osp.join(cfg.data_dir, 'cache'))
+        if not os.path.exists(cache_path):
+            os.makedirs(cache_path)
+        return cache_path
+
+    @property
+    def num_images(self):
+        return len(self.image_index)
+
+    def image_path_at(self, i):
+        raise NotImplementedError
+
+    def default_roidb(self):
+        raise NotImplementedError
+
+    def evaluate_detections(self, all_boxes, output_dir=None):
+        """
+
+        :param all_boxes:
+        :param output_dir:
+        :return:
+        """
+        raise NotImplementedError
+
+    def _get_widths(self):
+        return [PIL.Image.open(self.image_path_at(i)).size[0]
+                for i in xrange(self.num_images)]
+
+    def append_flipped_images(self):
+        num_images = self.num_images
+        widths = self._get_widths()
+        for i in xrange(num_images):
+            
