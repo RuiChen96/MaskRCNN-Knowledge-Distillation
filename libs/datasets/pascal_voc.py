@@ -16,7 +16,7 @@ import xml.etree.ElementTree as ET
 import libs.configs.config as cfg
 
 from .dataloader import sDataLoader
-from libs.boxes.cython_bbox as cython_bbox
+import libs.boxes.cython_bbox as cython_bbox
 from libs.nets.utils import everything2tensor
 from libs.layers.data_layer import data_layer_keep_aspect_ratio, \
     data_layer_keep_aspect_ratio_batch
