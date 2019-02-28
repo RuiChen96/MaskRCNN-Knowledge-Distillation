@@ -204,4 +204,50 @@ class imdb(object):
                 'gt_overlaps': gt_overlaps}
 
     def create_roidb_from_box_list(self, box_list, gt_roidb):
+        assert len(box_list) == self.num_images, \
+                'Number of boxes must match number of ground-truth images'
+        roidb = []
+        for i in xrange(self.num_images):
+            boxes = box_list[i]
+            num_boxes = boxes.shape[0]
+            overlaps = np.zeros((num_boxes, self.num_classes), dtype=np.float32)
+
+            if gt_roidb is not None and gt_roidb[i]['boxes'].size > 0:
+                gt_boxes = gt_roidb[i]['boxes']
+                gt_classes = gt_roidb[i]['gt_classes']
+                gt_overlaps = cython_bbox.bbox_overlaps(boxes.astype(np.float),
+                                                        gt_boxes.astype(np.float))
+                argmaxes = gt_overlaps.argmax(axis=1)
+                maxes = gt_overlaps.max(axis=1)
+                I = np.where(maxes > 0)[0]
+                overlaps[I, gt_classes[argmaxes[I]]] = maxes[I]
+            # end_if
+            overlaps = scipy.sparse.csr_matrix(overlaps)
+            roidb.append({
+                'boxes': boxes,
+                'gt_classes': np.zeros((num_boxes, ), dtype=np.int32),
+                'gt_overlaps': overlaps,
+                'flipped': False,
+                'seg_areas': np.zeros((num_boxes, ), dtype=np.float32),
+            })
+        # end_for
+        return roidb
+
+    @staticmethod
+    def merge_roidbs(a, b):
+        assert len(a) == len(b)
+        for i in xrange(len(a)):
+            a[i]['boxes'] = np.vstack((a[i]['boxes'], b[i]['boxes']))
+            a[i]['gt_classes'] = np.hstack((a[i]['gt_classes'],
+                                            b[i]['gt_classes']))
+            a[i]['gt_overlaps'] = scipy.sparse.vstack([a[i]['gt_overlaps'],
+                                                       b[i]['gt_overlaps']])
+            a[i]['seg_areas'] = np.hstack((a[i]['seg_areas'],
+                                           b[i]['seg_areas']))
+        # end_for
+        return a
+
+    def competition_mode(self, on):
+        """Turn competition mode on or off"""
         pass
+
