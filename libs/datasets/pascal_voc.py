@@ -21,8 +21,7 @@ from libs.nets.utils import everything2tensor
 from libs.layers.data_layer import data_layer_keep_aspect_ratio, \
     data_layer_keep_aspect_ratio_batch
 
-def unique_boxes():
-    pass
+
 
 if __name__ == '__main__':
     cfg.data_dir = './data/pascal_voc/'
