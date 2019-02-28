@@ -81,6 +81,12 @@ class imdb(object):
 
     def evaluate_detections(self, all_boxes, output_dir=None):
         """
+        all_boxes is a list of length number-of-classes.
+        Each list element is a list of length number-of-images.
+        Each of those list elements is either an empty list []
+        or a numpy array of detection.
+
+        all_boxes[class][image] = [] or np.array of shape #dets x 5
 
         :param all_boxes:
         :param output_dir:
@@ -146,6 +152,8 @@ class imdb(object):
         gt_overlaps = np.zeros(0)
         num_pos = 0
         for i in xrange(self.num_images):
+            # Checking for max_overlaps == 1 avoids including crowd annotations
+            # (... pretty hacking :/)
             max_gt_overlaps = self.roidb[i]['gt_overlaps'].toarray().max(axis=1)
             gt_inds = np.where((self.roidb[i]['gt_classes'] > 0) &
                                (max_gt_overlaps == 1))[0]
@@ -157,6 +165,8 @@ class imdb(object):
             num_pos += len(valid_gt_inds)
 
             if candidate_boxes is None:
+                # If candidate_boxes is not supplied, the default is to use the
+                # non-ground-truth boxes from this roidb
                 non_gt_inds = np.where(self.roidb[i]['gt_classes'] == 0)[0]
                 boxes = self.roidb[i]['boxes'][non_gt_inds, :]
             else:
