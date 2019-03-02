@@ -66,7 +66,22 @@ class pascal_voc(imdb):
         self._is_training = is_training
 
     def image_path_at(self, i):
-        pass
+        """
+        Return the absolute path to image i in the image sequence.
+        :param i:
+        :return:
+        """
+        return self.image_path_from_index(self._image_index[i])
+
+    def image_path_from_index(self, index):
+        """
+        Construct an image path from the image's "index" identifier.
+        """
+        image_path = os.path.join(self._data_path, 'JPEGImages',
+                                  index + self._image_ext)
+        assert os.path.exists(image_path), \
+                'Image path does not exist: {}'.format(image_path)
+        return image_path
 
 
 if __name__ == '__main__':
