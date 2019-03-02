@@ -83,6 +83,15 @@ class pascal_voc(imdb):
                 'Image path does not exist: {}'.format(image_path)
         return image_path
 
+    def _load_image_set_index(self):
+        """
+        Load the indexes listed in this dataset's image set file.
+        :return:
+        """
+        # Example path to image set file:
+        # self._devkit_path + /VOCdevkit2007/VOC2007/ImageSets/Main/val.txt
+        
+
 
 if __name__ == '__main__':
     cfg.data_dir = './data/pascal_voc/'
