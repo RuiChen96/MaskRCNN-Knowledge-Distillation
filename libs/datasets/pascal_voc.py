@@ -153,7 +153,26 @@ class pascal_voc(imdb):
         return roidb
 
     def rpn_roidb(self):
-        
+        if int(self._year) == 2007 or self._image_set != 'test':
+            gt_roidb = self.gt_roidb()
+            rpn_roidb = self._load_rpn_roidb(gt_roidb)
+            roidb = imdb.merge_roidbs(gt_roidb, rpn_roidb)
+        else:
+            roidb = self._load_rpn_roidb(None)
+
+        return roidb
+
+    def _load_rpn_roidb(self, gt_roidb):
+        filename = self.config['rpn_file']
+        print('loading {}'.format(filename))
+        assert os.path.exists(filename), \
+                'rpn data not found at: {}'.format(filename)
+        with open(filename, 'rb') as f:
+            box_list = cPickle.load(f)
+        return self.create_roidb_from_box_list(box_list, gt_roidb)
+
+    def _load_selective_search_roidb(self, gt_roidb):
+        pass
 
 
 
