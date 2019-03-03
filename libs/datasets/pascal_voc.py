@@ -110,6 +110,52 @@ class pascal_voc(imdb):
 
         This function loads/saves from/to a cache file to speed up future calls.
         """
+        cache_file = os.path.join(self.cache_path, self.name + '_gt_roidb.pkl')
+        if os.path.exists(cache_file):
+            with open(cache_file, 'rb') as fid:
+                roidb = cPickle.load(fid)
+            print('{} gt roidb loaded from {}'.format(self.name, cache_file))
+            return roidb
+
+        gt_roidb = [self._load_pascal_annotation(index)
+                    for index in self.image_index]
+        with open(cache_file, 'wb') as fid:
+            cPickle.dump(gt_roidb, fid, cPickle.HIGHEST_PROTOCOL)
+        print('Wrote gt roidb to {}',format(cache_file))
+
+        return gt_roidb
+
+    def selective_search_roidb(self):
+        """
+        Return the database of selective search regions of interest.
+        Ground-truth ROIs are also included.
+
+        This function loads/saves from/to a cache file to speed up future calls.
+        """
+        cache_file = os.path.join(self.cache_path,
+                                  self.name + '_selective_search_roidb.pkl')
+        if os.path.exists(cache_file):
+            with open(cache_file, 'rb') as fid:
+                roidb = cPickle.load(fid)
+            print('{} ss roidb loaded from {}'.format(self.name, cache_file))
+            return roidb
+
+        if int(self._year) == 2007 or self._image_set != 'test':
+            gt_roidb = self.gt_roidb()
+            ss_roidb = self._load_selective_search_roidb(gt_roidb)
+            roidb = imdb.merge_roidbs(gt_roidb, ss_roidb)
+        else:
+            roidb = self._load_selective_search_roidb(None)
+        with open(cache_file, 'wb') as fid:
+            cPickle.dump(roidb, fid, cPickle.HIGHEST_PROTOCOL)
+        print('wrote ss roidb to {}'.format(cache_file))
+
+        return roidb
+
+    def rpn_roidb(self):
+        
+
+
 
 
 
