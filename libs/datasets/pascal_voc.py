@@ -172,8 +172,33 @@ class pascal_voc(imdb):
         return self.create_roidb_from_box_list(box_list, gt_roidb)
 
     def _load_selective_search_roidb(self, gt_roidb):
-        pass
+        filename = os.path.abspath(os.path.join(cfg.data_dir,
+                                                'selective_search_data',
+                                                self.name + '.mat'))
+        assert os.path.exists(filename), \
+                'Selective search data not found at: {}'.format(filename)
+        raw_data = sio.loadmat(filename)['boxes'].ravel()
 
+        box_list = []
+        for i in xrange(raw_data.shape[0]):
+            # ? ? ?
+            boxes = raw_data[i][:, (1, 0, 3, 2)] - 1
+            keep = ds_utils.unique_boxes(boxes)
+            boxes = boxes[keep, :]
+            # filter small boxes
+            keep = ds_utils.filter_small_boxes(boxes, self.config['min_size'])
+            boxes = boxes[keep, :]
+            box_list.append(boxes)
+        # end_for
+        return self.create_roidb_from_box_list(box_list, gt_roidb)
+
+    def _load_pascal_annotation(self, index):
+        """
+        Load image and bounding boxes info from XML file in the PASCAL VOC
+        format.
+        """
+        filename = os.path.join(self._data_path, 'Annotations', index + '.xml')
+        pass
 
 
 
