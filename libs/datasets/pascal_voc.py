@@ -242,6 +242,50 @@ class pascal_voc(imdb):
             'seg_areas': seg_areas
         }
 
+    def _get_comp_id(self):
+        comp_id = (self._comp_id + '_' + self._salt if self.config['use_salt']
+                   else self._comp_id)
+        return comp_id
+
+    def _get_voc_results_file_template(self):
+        # VOCdevkit/results/VOC2007/Main/<comp_id>_det_test_aeroplane.txt
+        # {:s} is for cls label
+        filename = self._get_comp_id() + '_det_' + self._image_set + '_{:s}.txt'
+        path = os.path.join(
+            self._devkit_path,
+            'results',
+            'VOC' + self._year,
+            'Main',
+            filename
+        )
+        dirname = os.path.dirname(path)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+        return path
+
+    def _write_voc_results_file(self, all_boxes):
+        for cls_ind, cls in enumerate(self.classes):
+            if cls == '__background__':
+                continue
+            print('Writing {} VOC results file'.format(cls))
+            filename = self._get_voc_results_file_template().format(cls)
+            with open(filename, 'wt') as f:
+                for im_ind, index in enumerate(self.image_index):
+                    dets = all_boxes[cls_ind][im_ind]
+                    if dets.size <= 0:
+                        continue
+                    # the VOCdevkit expects 1-based indices
+                    for k in xrange(dets.shape[0]):
+                        f.write(
+                            '{:s} {:.3f} {:.1f} {:.1f} {:.1f} {:.1f}\n'.
+                                format(index, dets[k, -1],
+                                       dets[k, 0] + 1, dets[k, 1] + 1,
+                                       dets[k, 2] + 1, dets[k, 3] + 1)
+                        )
+
+    def _do_python_eval(self, output_dir = 'output'):
+        pass
+
 
 
 
