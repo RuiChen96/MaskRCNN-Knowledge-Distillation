@@ -1,3 +1,10 @@
+# --------------------------------------------------------
+# Fast R-CNN
+# Copyright (c) 2015 Microsoft
+# Licensed under The MIT License [see LICENSE for details]
+# Written by Ross Girshick
+# --------------------------------------------------------
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -370,6 +377,63 @@ class pascal_voc(imdb):
         else:
             self.config['use_salt'] = True
             self.config['cleanup'] = True
+
+    ######################################################
+    ### for pytorch dataloader
+    ######################################################
+
+    def to_detection_format(self, Dets, image_ids, im_scale_list):
+        """
+        Add detection results to list
+        """
+        for i, (dets, img_id) in enumerate(zip(Dets, image_ids)):
+            im_scale = im_scale_list[i]
+            dets[:, 0:4] = dets[:, 0:4] / im_scale
+        return Dets
+
+    def to_evaluation_format(self, all_results):
+        """
+        Return a list of list num_classes x num_images,
+        each element is a numpy.array of N x 5,
+        ( [[x1, y1, x2, y2, score], [x1, y1, x2, y2, score], ...] )
+
+        Input: [x1, y1, x2, y2, score, class_id]
+        Output: num_classes x num_images list [x1, y1, x2, y2, score]
+        """
+        all_boxes = [[[] for _ in xrange(self.num_classes)]
+                     for _ in xrange(self.num_classes)]
+
+        for img_id in range(self.num_images):
+            cls_dets = all_results[img_id]
+            cls_ids = cls_dets[:, -1].astype(np.int32)
+            for class_id in range(1, self.num_classes):
+                inds = np.where(cls_ids == class_id)[0]
+                all_boxes[class_id][img_id] = cls_dets[inds, :5]
+
+        return all_boxes
+
+    def __len__(self):
+        return len(self._image_index)
+
+    def __getitem__(self, i):
+        img_anno = self._gt_annotations[i]
+        img_name = self.image_path_at(i)
+        bboxes = img_anno['boxes'].astype(np.float32)
+        classes = img_anno['gt_classes'].astype(np.int32)
+        height, width = cv2.imread(img_name).shape[:2]
+
+        # ignore instance masks and mask training by building zero arrays
+        n = classes.shape[0]
+        inst_masks = np.zeros([n, height, width], dtype=np.int32)
+        mask = np.zeros([height, width], dtype=np.int32)
+
+        im, im_scale, annots = data_layer_keep_aspect_ratio(
+            img_name, bboxes, classes, inst_masks, mask, self._is_training
+        )
+
+        img_id = os.path.splitext(os.path.basename(img_name))[0]
+
+        return im, im_scale, annots, img_id
 
 
 if __name__ == '__main__':
