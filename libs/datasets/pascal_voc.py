@@ -352,7 +352,24 @@ class pascal_voc(imdb):
         pass
 
     def evaluate_detections(self, all_boxes, output_dir='output'):
-        pass
+        self._write_voc_results_file(all_boxes)
+        self._do_python_eval(output_dir)
+        if self.config['matlab_eval']:
+            self._do_matlab_eval(output_dir)
+        if self.config['cleanup']:
+            for cls in self._classes:
+                if cls == '__background__':
+                    continue
+                filename = self._get_voc_results_file_template().format(cls)
+                os.remove(filename)
+
+    def competition_mode(self, on):
+        if on:
+            self.config['use_salt'] = False
+            self.config['cleanup'] = False
+        else:
+            self.config['use_salt'] = True
+            self.config['cleanup'] = True
 
 
 if __name__ == '__main__':
