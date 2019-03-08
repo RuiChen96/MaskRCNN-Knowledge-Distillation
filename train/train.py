@@ -35,8 +35,17 @@ np.random.seed(42)
 def parse_args():
     pass
 
-def log_images():
-    pass
+def log_images(imgs, names, global_step, prefix='Image'):
+    summary = []
+    for i, I in enumerate(imgs):
+        summary.append(tbx.summary.image('%d/%s-%s'%(global_step, prefix, names[i]), I, dataformats='HWC'))
+    return summary
+
+args = parse_args()
+
+
+# config model and lr
+
 
 
 if __name__ == '__main__':
