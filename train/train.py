@@ -124,6 +124,50 @@ for ep in range(start_epoch, cfg.max_epoch):
         adjust_learning_rate(optimizer, lr)
         print('adjusting learning rate {:.6f}'.format(lr))
 
+    for step, batch in enumerate(train_data):
+        timer.tic()
+
+        input, anchors_np, im_scale_list, image_ids, gt_boxes_list, rpn_targets, _, _ = batch
+        #
+        gt_boxes_list = ScatterList(gt_boxes_list)
+        input = everything2cuda(input)
+        rpn_targets = everything2cuda(rpn_targets)
+        #
+        outs = model(input, gt_boxes_list, anchors_np, rpn_targets=rpn_targets)
+
+        if cfg.model_type == 'maskrcnn':
+            rpn_logit, rpn_box, rpn_prob, rpn_labels, rpn_bbtargets, rpn_bbwghts, anchors, \
+            rois, roi_img_ids, rcnn_logit, rcnn_box, rcnn_prob, rcnn_labels, rcnn_bbtargets, rcnn_bbwghts = outs
+            #
+            outputs = []
+            #
+            targets = []
+        elif cfg.model_type == 'retinanet':
+            # Thinking like this: single-stage detector take rpn results as final results
+            rpn_logit, rpn_box, rpn_prob, rpn_labels, rpn_bbtargets, rpn_bbwghts = outs
+            #
+            outputs = []
+            #
+            targets = []
+        else:
+            raise ValueError('Unknown model type: {:s}'.format(cfg.model_type))
+
+        # # BUILD LOSS
+        loss_dict = model_ori.build_losses(outputs, targets)
+        loss = model_ori.loss()
+
+        # # BACK PROPAGATION
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        t = timer.toc()
+
+        # # TENSORBOARD VISUALIZATION
+        if step % cfg.display == 0:
+            loss_str = ', '.join('{:s}: {:.3f}'.format(k, v) for k, v in loss_dict.iteritems())
+            print(time.strftime())
+
 
 
 if __name__ == '__main__':
