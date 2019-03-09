@@ -13,9 +13,18 @@ restore = None
 """TRAINING"""
 start_over = False
 max_epoch = 30
+lr = 0.001
 
 """NETWORK"""
+zoom = 0
+maxpool5 = True
+model_type = 'maskrcnn' # or retinanet
 backbone = 'resnet50'
+
+"""DATA"""
+# support pascal_voc for now
+data_workers = 4
+batch_size = 6
 
 """Anchor Output"""
 ANCHORS = []

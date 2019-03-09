@@ -52,7 +52,32 @@ num_anchors = len(cfg.anchor_ratios) * len(cfg.anchor_scales[0]) * len(cfg.ancho
 resnet = resnet50 if cfg.backbone == 'resnet50' else resnet101
 resnet = resnet18 if cfg.backbone == 'resnet18' else resnet
 
+detection_model = MaskRCNN if cfg.model_type.lower() == 'maskrcnn' else RetinaNet
 
+model = detection_model(resnet())
+
+# for multiple GPUs
+if torch.cuda.device_count() > 1:
+    print()
+    print('--- Using %d GPUs ---' % torch.cuda.device_count())
+    print()
+    model_ori = model
+    #
+    model = ListDataParallel(model)
+    # batch_size * num_of_GPUs
+    cfg.batch_size = cfg.batch_size * torch.cuda.device_count()
+    # data_workers * num_of_GPUs
+    cfg.data_workers = cfg.data_workers * torch.cuda.device_count()
+    # TODO: why learning rate * num_of_GPUs ?
+    cfg.lr = cfg.lr * torch.cuda.device_count()
+else:
+    # for single GPU
+    model_ori = model
+
+lr = cfg.lr
+start_epoch = 0
+if cfg.restore is not None:
+    print('')
 
 
 if __name__ == '__main__':
