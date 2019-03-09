@@ -77,7 +77,39 @@ else:
 lr = cfg.lr
 start_epoch = 0
 if cfg.restore is not None:
-    print('')
+    print('Restoring from {:s} ...'.format(cfg.restore))
+    meta = load_net(cfg.restore, model)
+    print(meta)
+    if meta[0] >= 0 and not cfg.start_over:
+        start_epoch = meta[0] + 1
+        lr = meta[1]
+    print('Restored from {:s}, starting from {:d} epoch, lr: {:.6f}'.format(cfg.restore, start_epoch, lr))
+
+trainable_vars = [param for param in model.parameters() if param.requires_grad]
+
+for k, var in dict(model.named_parameters()).items():
+    if var.requires_grad:
+        print('gradients --- ', k)
+
+if cfg.solver == 'SGD':
+    optimizer = torch.optim.SGD()
+elif cfg.solver == 'RMS':
+    optimizer = torch.optim.RMSprop()
+elif cfg.solver == 'Adam':
+    optimizer = torch.optim.Adam()
+else:
+    optimizer = ''
+    raise ValueError()
+
+model.cuda()
+
+# # DATA LOADER
+get_loader = get_data_loader(cfg.datasetname)
+train_data = get_loader()
+class_names = train_data.dataset.classes
+print('dataset len: {}'.format(len(train_data.dataset)))
+
+
 
 
 if __name__ == '__main__':

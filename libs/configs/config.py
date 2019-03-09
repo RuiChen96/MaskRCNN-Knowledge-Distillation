@@ -15,6 +15,8 @@ start_over = False
 max_epoch = 30
 lr = 0.001
 
+solver = 'SGD'
+
 """NETWORK"""
 zoom = 0
 maxpool5 = True
@@ -39,3 +41,10 @@ anchor_scales = [
 anchor_ratios = [0.5, 1.0, 2.0]
 anchor_base = 16
 anchor_shift = [[0.0, 0.0], ]
+
+"""LOGs"""
+train_dir = './output'
+# support pascal_voc
+datasetname = 'coco'
+tensorboard = True
+
