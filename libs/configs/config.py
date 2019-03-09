@@ -13,6 +13,8 @@ restore = None
 """TRAINING"""
 start_over = False
 max_epoch = 30
+lr_decay_epoches = [10, 20, 25]
+lr_decay = 0.1
 lr = 0.001
 
 solver = 'SGD'

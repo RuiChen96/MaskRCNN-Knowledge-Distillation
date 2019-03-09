@@ -109,6 +109,20 @@ train_data = get_loader()
 class_names = train_data.dataset.classes
 print('dataset len: {}'.format(len(train_data.dataset)))
 
+tb_dir = os.path.join(
+    cfg.train_dir, cfg.backbone + '_' + cfg.datasetname, time.strftime("%h%d_%H")
+)
+writer = tbx.FileWriter(tb_dir)
+summary_out = []
+
+global_step = 0
+timer = Timer()
+
+for ep in range(start_epoch, cfg.max_epoch):
+    if ep in cfg.lr_decay_epoches and cfg.solver == 'SGD':
+        lr *= cfg.lr_decay
+        adjust_learning_rate(optimizer, lr)
+        print('adjusting learning rate {:.6f}'.format(lr))
 
 
 
