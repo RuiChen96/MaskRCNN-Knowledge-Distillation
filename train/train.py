@@ -45,6 +45,13 @@ args = parse_args()
 
 
 # config model and lr
+num_anchors = len(cfg.anchor_ratios) * len(cfg.anchor_scales[0]) * len(cfg.anchor_shift) \
+    if isinstance(cfg.anchor_scales[0], list) else \
+    len(cfg.anchor_ratios) * len(cfg.anchor_scales)
+
+resnet = resnet50 if cfg.backbone == 'resnet50' else resnet101
+resnet = resnet18 if cfg.backbone == 'resnet18' else resnet
+
 
 
 
