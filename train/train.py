@@ -18,8 +18,8 @@ import libs.configs.config as cfg
 import libs.postprocessings.single_shot as single_shot
 
 from libs.nets.resnet import resnet18, resnet50, resnet101
-from libs.nets.MaskRCNN import MaskRCNN
-from libs.nets.RetinaNet import RetinaNet
+from libs.nets.maskrcnn import MaskRCNN
+from libs.nets.retinanet import RetinaNet
 from libs.nets.data_parallel import ListDataParallel, ScatterList
 
 from libs.datasets.factory import get_data_loader
