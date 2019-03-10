@@ -25,6 +25,8 @@ maxpool5 = True
 model_type = 'maskrcnn' # or retinanet
 backbone = 'resnet50'
 
+save_prefix = ''
+
 """DATA"""
 # support pascal_voc for now
 data_workers = 4

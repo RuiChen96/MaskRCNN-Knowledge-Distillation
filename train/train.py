@@ -163,12 +163,67 @@ for ep in range(start_epoch, cfg.max_epoch):
 
         t = timer.toc()
 
-        # # TENSORBOARD VISUALIZATION
+        # # COMPUTING LOSS
         if step % cfg.display == 0:
             loss_str = ', '.join('{:s}: {:.3f}'.format(k, v) for k, v in loss_dict.iteritems())
             print(time.strftime())
 
+            # # TENSORBOARD VISUALIZATION
+            summary_out2 = []
+            # Visualize Loss
+            for k, v in loss_dict.iteritems():
+                summary_out2.append(tbx.summary.scalar('Loss/' + k, v.data.cpu().numpy()))
+            # Visualize Learning Rate
+            summary_out2.append(tbx.summary.scalar('LR', lr))
+            for s in summary_out2:
+                writer.add_summary(s, float(global_step))
 
+        # Save Model
+        if step % 5000 == 0 and global_step != 0:
+            if not cfg.save_prefix:
+                save_path = os.path.join()
+            else:
+                save_path = os.path.join()
+            save_net()
+            print('')
+
+        # Draw Detection Results (Stage-1, Stage-2)
+        if global_step % cfg.log_image == 0:
+
+            summary_out = []
+            input_np = everything2numpy(input)
+
+            # Get Detection Results
+            dets_dict = model_ori.get_final_results()
+            for key, dets in dets_dict.iteritems():
+                Is = single_shot.draw_detection()
+                Is = Is.astype(np.uint8)
+                summary_out += log_images()
+
+            # Draw Ground-Truth
+            Is = single_shot.draw_gtboxes()
+            Is = Is.astype(np.uint8)
+            summary_out += log_images()
+
+            summary = model_ori.get_summaries()
+            for s in summary:
+                writer.add_summary()
+            for s in summary_out:
+                writer.add_summary()
+            summary_out = []
+        # end_if
+        global_step += 1
+    # end_for
+
+    if not cfg.save_prefix:
+        save_path = os.path.join()
+    else:
+        save_path = os.path.join()
+    save_net()
+    print()
+# end_for
+
+writer.close()
 
 if __name__ == '__main__':
     pass
