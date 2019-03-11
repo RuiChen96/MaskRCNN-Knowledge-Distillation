@@ -1,5 +1,5 @@
 #
-# enhanced feature pyramid networks
+# Enhanced Feature Pyramid Networks by "Pyramid Normalization"
 #
 
 from __future__ import absolute_import
@@ -11,8 +11,15 @@ import torch.nn as nn
 from torch.nn.parameter import Parameter
 import torch.nn.functional as F
 
-class PyramidNorm(nn.Module):
 
+class PyramidNorm(nn.Module):
+    """
+    Assuming we have already got a meta-feature,
+    which is a concatenated result of several pyramid features
+    along the channel dimension. However, it is un-normalized.
+    This class will normalize this feature using BatchNorm
+    along the ***Pyramid*** dimension.
+    """
     def __init__(self, groups, eps=1e-5, momentum=0.1, affine=True):
         super(PyramidNorm, self).__init__()
         self.groups = groups
@@ -38,11 +45,18 @@ class PyramidNorm(nn.Module):
         self.train()
 
     def forward(self, input):
+        # input of shape (N, C, H, W), reshape to (N, g, wH, W), g*w == C
+        # do a batch norm
+        # reshape back to (N, C, H, W)
         n, c, h, w = input.size()
-        normed = F.batch_norm()
+        normed = F.batch_norm(input.view(n, self.groups, -1, w),
+                              self.running_mean, self.running_var, self.weight, self.bias,
+                              self.training, self.momentum, self.eps)
 
         return normed.view(n, c, h, w)
 
     def __repr__(self):
-        return ()
+        return ('{name}({groups}, eps={eps}, momentum={momentum},'
+                ' affine={affine})'
+                .format(name=self.__class__.__name__, **self.__dict__))
 

@@ -9,6 +9,8 @@ import torch.nn.functional as F
 
 import libs.configs.config as cfg
 
+from .pyramid2 import PyramidFPN
+
 import time
 
 class MaskRCNN(detection_model):
