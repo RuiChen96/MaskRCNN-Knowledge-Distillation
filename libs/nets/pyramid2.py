@@ -1,5 +1,5 @@
 #
-# enhanced feature pyramid networks
+# Enhanced Feature Pyramid Networks
 #
 
 from __future__ import absolute_import
@@ -13,6 +13,7 @@ import torch.nn.functional as F
 from . import utils
 from .pyramid_norm import PyramidNorm
 import numpy as np
+
 
 class PyramidFPN(nn.Module):
 
@@ -31,31 +32,53 @@ class PyramidFPN(nn.Module):
             # ['C2', 'C3', 'C4', 'C5']
 
             # For Lateral Connection
-            self.lateral_c2 = nn.Conv2d()
-            self.lateral_c3 = nn.Conv2d()
-            self.lateral_c4 = nn.Conv2d()
-            self.lateral_c5 = nn.Conv2d()
+            self.lateral_c2 = nn.Conv2d(in_channels[0], num_channels, 1, 1, padding=0, bias=True)
+            self.lateral_c3 = nn.Conv2d(in_channels[1], num_channels, 1, 1, padding=0, bias=True)
+            self.lateral_c4 = nn.Conv2d(in_channels[2], num_channels, 1, 1, padding=0, bias=True)
+            self.lateral_c5 = nn.Conv2d(in_channels[3], num_channels, 1, 1, padding=0, bias=True)
 
             # For Tail Connection
-            self.tail_c5 = nn.Conv2d()
-            self.tail_c4 = nn.Conv2d()
-            self.tail_c3 = nn.Conv2d()
-            self.tail_c2 = nn.Conv2d()
+            self.tail_c5 = nn.Conv2d(num_channels, num_channels, 3, 1, padding=1, bias=True)
+            self.tail_c4 = nn.Conv2d(num_channels, num_channels, 3, 1, padding=1, bias=True)
+            self.tail_c3 = nn.Conv2d(num_channels, num_channels, 3, 1, padding=1, bias=True)
+            self.tail_c2 = nn.Conv2d(num_channels, num_channels, 3, 1, padding=1, bias=True)
         else:
             # ['C3', 'C4', 'C5']
 
             # For Lateral Connection
-            self.lateral_c3 = nn.Conv2d()
-            self.lateral_c4 = nn.Conv2d()
-            self.lateral_c5 = nn.Conv2d()
+            self.lateral_c3 = nn.Conv2d(in_channels[0], num_channels, 1, 1, padding=0, bias=True)
+            self.lateral_c4 = nn.Conv2d(in_channels[1], num_channels, 1, 1, padding=0, bias=True)
+            self.lateral_c5 = nn.Conv2d(in_channels[2], num_channels, 1, 1, padding=0, bias=True)
 
             # For Tail Connection
-            self.tail_c5 = nn.Conv2d()
-            self.tail_c4 = nn.Conv2d()
-            self.tail_c3 = nn.Conv2d()
+            self.tail_c5 = nn.Conv2d(num_channels, num_channels, 3, 1, padding=1, bias=True)
+            self.tail_c4 = nn.Conv2d(num_channels, num_channels, 3, 1, padding=1, bias=True)
+            self.tail_c3 = nn.Conv2d(num_channels, num_channels, 3, 1, padding=1, bias=True)
         # end if_else
         utils.init_xavier(self)
 
-    def forward(self, *input):
-        pass
+    def forward(self, endpoints):
+        C5 = endpoints['C5']
+        C4 = endpoints['C4']
+        C3 = endpoints['C3']
+        no_pooling = C4.size(2) == C5.size(2)
+
+        P5 = self.lateral_c5(C5)
+        P4 = self.lateral_c4(C4) + P5 if no_pooling else \
+             self.lateral_c4(C4) + F.upsample(P5, scale_factor=2, mode='nearest')
+        P3 = self.lateral_c3(C3) + F.upsample(P4, scale_factor=2, mode='nearest')
+
+        if self.with_c2:
+            C2 = endpoints['C2']
+            P2 = self.lateral_c2(C2) + F.upsample(P3, scale_factor=2, mode='nearest')
+            P2 = self.tail_c2(P2)
+            P3 = self.tail_c3(P3)
+            P4 = self.tail_c4(P4)
+            P5 = self.tail_c5(P5)
+            return [P2, P3, P4, P5]
+        else:
+            P3 = self.tail_c3(P3)
+            P4 = self.tail_c4(P4)
+            P5 = self.tail_c5(P5)
+            return [P3, P4, P5]
 

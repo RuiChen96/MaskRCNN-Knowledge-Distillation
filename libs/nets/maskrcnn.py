@@ -9,9 +9,16 @@ import torch.nn.functional as F
 
 import libs.configs.config as cfg
 
+from .head import RPNHead
+from .model import detection_model
 from .pyramid2 import PyramidFPN
+from .rcnn import RCNN
+from .focal_loss import FocalLoss, SigmoidCrossEntropy
+
+from .smooth_l1_loss import smooth_l1_loss
 
 import time
+
 
 class MaskRCNN(detection_model):
     """
@@ -33,3 +40,20 @@ class MaskRCNN(detection_model):
 
         self.maxpool5 = cfg.maxpool5
         self.pyramid = PyramidFPN(in_channels, f_keys, num_channels)
+
+        # foreground/background classification
+        self.rpn_activation = 'softmax'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
