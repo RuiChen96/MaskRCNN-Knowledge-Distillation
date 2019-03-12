@@ -25,4 +25,3 @@ class FocalLoss(_WeightedLoss):
 
         fg_nums = target.data.gt(0).sum.item()
 
-        
