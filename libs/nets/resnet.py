@@ -131,8 +131,64 @@ class ResNet(nn.Module):
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
-        self.layer1 = self._make_layer()
+        self.layer1 = self._make_layer(block, 64, layers[0])
+        self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
+        self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
+        self.maxpool5 = kwargs['maxpool5'] if 'maxpool5' in kwargs else True
+        if self.maxpool5:
+            self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
+        else:
+            self.layer4 = self._make_layer_no_downsample(block, 512, layers[3], stride=2)
+            print('Removing subsample 5 ... using dilation.')
 
-    def _make_layer(self):
-        pass
+        self.avgpool = nn.AvgPool2d(7)
+        self.fc = nn.Linear(512 * block.expansion, num_classes)
+
+    def _make_layer(self, block, planes, blocks, stride=1, dilation=1):
+        downsample = None
+        if stride != 1 or self.in_planes != planes * block.expansion:
+            downsample = nn.Sequential(
+                nn.Conv2d(in_channels=self.in_planes, out_channels=planes * block.expansion, \
+                          kernel_size=1, stride=stride, bias=False),
+                nn.BatchNorm2d(planes * block.expansion),
+            )
+
+        layers = []
+        layers.append(block(self.in_planes, planes, stride, downsample, dilation))
+        self.in_planes = planes * block.expansion
+        for i in range(1, blocks):
+            layers.append(block(self.in_planes, planes, dilation=dilation))
+
+        return nn.Sequential(*layers)
+
+    def _make_layer_no_downsample(self, block, planes, blocks, stride=1, dilation=1):
+        downsample = None
+
+        if stride != 1 or self.in_planes != planes * block.expansion:
+            downsample = nn.Sequential(
+                nn.Conv2d(in_channels=self.in_planes, out_channels=planes * block.expansion, \
+                          kernel_size=1, stride=1, bias=False),
+                nn.BatchNorm2d(planes * block.expansion)
+            )
+
+        layers = []
+        layers.append(block(self.in_planes, planes, 1, downsample, dilation=stride))
+        self.in_planes = planes * block.expansion
+        for i in range(1, blocks):
+            layers.append(block(self.in_planes, planes, dilation=dilation))
+
+        return nn.Sequential(*layers)
+
+
+def resnet18(pretrained=False, **kwargs):
+    """"""
+    model = ResNet()
+    if pretrained:
+        model.load_state_dict(model_zoo.load_url(model_urls['resnet18']), strict=False)
+
+    return model
+
+
+def resnet50(pretrained=False, weight_path=None, **kwargs):
+    pass
 
