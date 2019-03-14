@@ -1,12 +1,17 @@
+#
+# This is a copy of torchvision.models.resnet.py
+#
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 import torch.nn as nn
+import torch.utils.model_zoo as model_zoo
+
 import math
 import os
 import torch
-import torch.utils.model_zoo as model_zoo
 from . import utils
 import torchvision.models.resnet
 
@@ -16,11 +21,11 @@ __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', \
 
 
 model_urls = {
-    'resnet18': '',
-    'resnet34': '',
-    'resnet50': '',
-    'resnet101': '',
-    'resnet152': '',
+    'resnet18': 'https://download.pytorch.org/models/resnet18-5c106cde.pth',
+    'resnet34': 'https://download.pytorch.org/models/resnet34-333f7ec4.pth',
+    'resnet50': 'https://download.pytorch.org/models/resnet50-19c8e357.pth',
+    'resnet101': 'https://download.pytorch.org/models/resnet101-5d3b4d8f.pth',
+    'resnet152': 'https://download.pytorch.org/models/resnet152-b121ed2d.pth',
 }
 
 
@@ -30,6 +35,14 @@ def conv3x3(in_planes, out_planes, stride=1):
     """
     return nn.Conv2d(in_channels=in_planes, out_channels=out_planes, \
                      kernel_size=3, stride=stride, padding=1, bias=False)
+
+
+def conv1x1(in_planes, out_planes, stride=1):
+    """
+    1x1 convolution
+    """
+    return nn.Conv2d(in_channels=in_planes, out_channels=out_planes, \
+                     kernel_size=1, stride=stride, bias=False)
 
 
 class BasicBlock(nn.Module):
@@ -74,21 +87,24 @@ class Bottleneck(nn.Module):
 
         super(Bottleneck, self).__init__()
 
+        # conv1x1()
         self.conv1 = nn.Conv2d(in_channels=in_planes, out_channels=planes, \
                                kernel_size=1, bias=False)
         self.bn1 = nn.BatchNorm2d(planes)
-        #
+
         padding = 1 if dilation == 1 else 2
-        #
+
+        # conv3x3()
         self.conv2 = nn.Conv2d(in_channels=planes, out_channels=planes, \
                                kernel_size=3, stride=stride, padding=padding, \
                                bias=False, dilation=dilation)
         self.bn2 = nn.BatchNorm2d(planes)
-        #
+
+        # conv1x1(), out_channels = planes * self.expansion
         self.conv3 = nn.Conv2d(in_channels=planes, out_channels=planes * 4, \
                                kernel_size=1, bias=False)
         self.bn3 = nn.BatchNorm2d(planes * 4)
-        #
+
         self.relu = nn.ReLU(inplace=True)
         self.downsample = downsample
         self.stride = stride
@@ -120,9 +136,9 @@ class ResNet(nn.Module):
 
     def __init__(self, block, layers, num_classes=1000, **kwargs):
 
-        self.in_planes = 64
-
         super(ResNet, self).__init__()
+
+        self.in_planes = 64
 
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=64, \
                                kernel_size=7, stride=2, padding=3, bias=False)
@@ -142,6 +158,7 @@ class ResNet(nn.Module):
             print('Removing subsample 5 ... using dilation.')
 
         self.avgpool = nn.AvgPool2d(7)
+        # self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(512 * block.expansion, num_classes)
 
     def _make_layer(self, block, planes, blocks, stride=1, dilation=1):
@@ -179,10 +196,42 @@ class ResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
+    def forward(self, x):
+
+        # For later use in " Feature Pyramid Network ".
+        endpoints = dict()
+
+        endpoints['C0'] = x
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+
+        endpoints['C1'] = x
+        x = self.maxpool(x)
+        x = self.layer1(x)
+
+        endpoints['C2'] = x
+        x = self.layer2(x)
+
+        endpoints['C3'] = x
+        x = self.layer3(x)
+
+        endpoints['C4'] = x
+        x = self.layer4(x)
+
+        endpoints['C5'] = x
+
+        return endpoints
+
 
 def resnet18(pretrained=False, **kwargs):
-    """"""
-    model = ResNet()
+    """
+    Constructs a ResNet-18 model.
+
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet.
+    """
+    model = ResNet(BasicBlock, [2, 2, 2, 2], **kwargs)
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['resnet18']), strict=False)
 
@@ -190,5 +239,38 @@ def resnet18(pretrained=False, **kwargs):
 
 
 def resnet50(pretrained=False, weight_path=None, **kwargs):
-    pass
+    """"""
+    model = ResNet(Bottleneck, [3, 4, 6, 3], **kwargs)
+    if pretrained:
+        model.load_state_dict(model_zoo.load_url(model_urls['resnet50']), strict=False)
+
+    return model
+
+
+def resnet101(pretrained=False, **kwargs):
+    """"""
+    model = ResNet(Bottleneck, [3, 4, 23, 3], **kwargs)
+    if pretrained:
+        model.load_state_dict(model_zoo.load_url(model_urls['resnet101']), strict=False)
+
+    return model
+
+
+# Not frequently USED Model
+def resnet34(pretrained=False, **kwargs):
+    """"""
+    model = ResNet(BasicBlock, [3, 4, 6, 3], **kwargs)
+    if pretrained:
+        model.load_state_dict(model_zoo.load_url(model_urls['resnet34']), strict=False)
+
+    return model
+
+
+def resnet152(pretrained=False, **kwargs):
+    """"""
+    model = ResNet(Bottleneck, [3, 8, 36, 3], **kwargs)
+    if pretrained:
+        model.load_state_dict(model_zoo.load_url(model_urls['resnet152']), strict=False)
+
+    return model
 
