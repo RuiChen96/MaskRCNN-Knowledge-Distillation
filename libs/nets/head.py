@@ -15,9 +15,14 @@ class RPNHead(nn.Module):
         super(RPNHead, self).__init__()
 
         conv_combo = utils.Conv2d
-        self.conv = conv_combo()
-        self.conv_cls_out = nn.Conv2d()
-        self.conv_box_out = nn.Conv2d()
+        self.conv = conv_combo(in_channels=in_channels, out_channels=num_channels, \
+                               kernel_size=3, same_padding=True)
+        # out_channels = num_anchors * 2 (fg / bg)
+        self.conv_cls_out = nn.Conv2d(in_channels=num_channels, out_channels=num_anchors * 2, \
+                                      kernel_size=1, padding=0, bias=True)
+        # out_channels = num_anchors * 4 (four offsets)
+        self.conv_box_out = nn.Conv2d(in_channels=num_channels, out_channels=num_anchors * 4, \
+                                      kernel_size=1, padding=0, bias=True)
 
         # utils.init_xavier(self)
         utils.init_gauss(self.conv, std=0.01)
@@ -36,4 +41,8 @@ class RPNHead(nn.Module):
     def forward(self, x):
         rpn_logits = self.conv(x)
         return [self.conv_cls_out(rpn_logits), self.conv_box_out(rpn_logits)]
+
+
+class RetinaHead(nn.Module):
+    pass
 

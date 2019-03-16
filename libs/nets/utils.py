@@ -55,3 +55,11 @@ class Conv2d(nn.Module):
             x = self.relu(x)
         return x
 
+
+def everything2numpy(x):
+    pass
+
+
+def everything2cuda(x, volatile=False):
+    pass
+
