@@ -17,6 +17,8 @@ lr_decay_epoches = [10, 20, 25]
 lr_decay = 0.1
 lr = 0.001
 
+use_focal_loss = True
+
 solver = 'SGD'
 
 """NETWORK"""
@@ -25,6 +27,13 @@ maxpool5 = True
 model_type = 'maskrcnn' # or retinanet
 backbone = 'resnet50'
 
+# For COCO dataset
+num_classes = 81
+
+with_segment = True
+# class activation, softmax or sigmoid?
+# There is no background class for sigmoid.
+class_activation = 'sigmoid'
 save_prefix = ''
 
 """DATA"""
