@@ -43,6 +43,31 @@ class MaskRCNN(detection_model):
 
         # foreground/background classification
         self.rpn_activation = 'softmax'
+        self.rpn_cls_loss_func = FocalLoss(gamma=2, alpha=0.25, \
+                                           activation=self.rpn_activation) \
+            if cfg.use_focal_loss else nn.CrossEntropyLoss(ignore_index=-1)
+        self.rpn = RPNHead(in_channels=num_channels, num_classes=2, num_anchors=num_anchors, \
+                           num_channels=256, activation=self.rpn_activation)
+
+        # TODO: Pyramid RoIAlign 2
+        self.pyramid_roi_align = []
+
+        self.rcnn = RCNN(num_channels=num_channels, num_classes=num_classes, \
+                         feat_height=7, feat_width=7, activation=self.activation)
+        if self.activation == 'softmax':
+            self.rcnn_cls_loss_func = nn.CrossEntropyLoss()
+        elif self.activation == 'sigmoid':
+            self.rcnn_cls_loss_func = SigmoidCrossEntropy()
+
+        if is_training:
+            # TODO: RoITarget
+            self.roi_target = []
+            # TODO: AnchorTarget
+            self.anchor_target = []
+
+    def forward(self, input, gt_boxes_list, anchors_np, rpn_targets=None):
+
+        batch_size = input.size(0)
 
 
 

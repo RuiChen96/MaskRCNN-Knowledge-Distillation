@@ -56,11 +56,27 @@ class detection_model(nn.Module):
         # they will "super" class-detection_model later.
         pass
 
-    def _objectness(self):
-        pass
+    def _objectness(self, probs, activation=None):
+        activation = self.rpn_activation if activation is None else activation
+        if activation == 'softmax':
+            return 1. - probs[:, 0]
+        elif activation == 'sigmoid':
+            return probs.max(dim=1)[0]
+        else:
+            raise ValueError('Unknown activation function {:s}'.format(activation))
 
-    def _rerange(self):
-        pass
+    def _rerange(self, rpn_outs, last_dimension=None):
+        """
+        Rerange outputs of shape (Pyramid, N, C, H, W) to (N x L x H x W, C)
+        """
+        last_dimension = self.num_classes if last_dimension is None else last_dimension
+        n = rpn_outs[0][0].size()[0]
+        c = rpn_outs[0][0].size()[1]
+        cb = rpn_outs[0][1].size()[1]
+        rpn_logit = []
+        rpn_box = []
+
+        return rpn_logit, rpn_box
 
     def _stage_one_results(self):
         pass
