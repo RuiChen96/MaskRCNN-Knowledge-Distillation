@@ -51,6 +51,10 @@ rpn_batch_size = 384
 rpn_fg_fraction = 0.25
 #
 rpn_clobber_positives = True
+# 'simple', '', 'advanced'
+rpn_sample_strategy = 'simple'
+# 'linear', 'fastrcnn'
+rpn_box_encoding = 'fastrcnn'
 
 """Anchor Output"""
 ANCHORS = []

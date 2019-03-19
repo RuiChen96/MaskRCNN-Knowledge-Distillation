@@ -78,12 +78,31 @@ class detection_model(nn.Module):
 
         return rpn_logit, rpn_box
 
-    def _stage_one_results(self):
-        pass
+    def _stage_one_results(self, rpn_box, rpn_prob, anchors, top_n=2000, \
+                           overlap_threshold=0.7, \
+                           top_n_post_nms=None):
+        boxes, probs, img_ids, anchors = \
+            self._decode_and_choose_top_n_stage1(rpn_box, rpn_prob, anchors, top_n=top_n)
 
     def _thresholding(self):
         pass
 
     def build_losses_rpn(self):
         pass
+
+    def _decode_and_choose_top_n_stage1(self, rpn_box, rpn_prob, anchors, top_n=1000):
+
+        objness = self._objectness(rpn_prob)
+        _, inds = objness.sort(dim=0, descending=True)
+        inds = inds[: top_n]
+
+        selected_boxes = rpn_box[inds]
+        selected_probs = rpn_prob[inds]
+        anchor_ids = inds % anchors.size(0)
+        selected_anchors = anchors[anchor_ids]
+        selected_boxes = decoding_box(selected_boxes, selected_anchors, \
+                                      box_encoding=cfg.rpn_box_encoding)
+        selected_img_ids = inds / anchors.size(0)
+
+        return selected_boxes, selected_probs, selected_img_ids, selected_anchors
 

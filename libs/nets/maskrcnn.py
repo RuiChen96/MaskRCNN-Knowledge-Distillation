@@ -19,6 +19,8 @@ from .smooth_l1_loss import smooth_l1_loss
 
 from libs.layers.data_layer import compute_rpn_targets_in_batch
 
+from libs.nets.utils import everything2cuda, everything2numpy
+
 import time
 
 
@@ -94,7 +96,28 @@ class MaskRCNN(detection_model):
                 '{:d} vs {:d}'.format(input.size(0), len(gt_boxes_list))
             if rpn_targets is None:
                 # TODO: compute_rpn_targets_in_batch()
-                rpn_targets = compute_rpn_targets_in_batch()
+                rpn_targets = compute_rpn_targets_in_batch(gt_boxes_list, anchors_np)
+                rpn_labels, _, rpn_bbtargets, rpn_bbwghts = everything2cuda(rpn_targets)
+            else:
+                rpn_labels, rpn_bbtargets, rpn_bbwghts = rpn_targets
+            # end if-else
+
+            # TODO: _stage_one_results()
+            rois, probs, roi_img_ids = self._stage_one_results(rpn_box, rpn_prob, anchors, \
+                                                               top_n=20000 * batch_size, \
+                                                               overlap_threshold=0.7, \
+                                                               top_n_post_nms=2000)
+            rois, roi_labels, roi_img_ids = sample_rois(rois, roi_img_ids, gt_boxes_list)
+        else:
+            rpn_labels = rpn_bbtargets = rpn_bbwghts = None
+            rois, probs, roi_img_ids = self._stage_one_results(rpn_box, rpn_prob, anchors, \
+                                                               top_n=6000 * batch_size, \
+                                                               overlap_threshold=0.7)
+            rois, probs, roi_img_ids = self._thresholding(rois, probs, roi_img_ids, 0.05)
+        # end if-else
+
+        # TODO: pyramid_roi_align()
+        rcnn_feats = self.pyramid_roi_align()
 
 
 
