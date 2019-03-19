@@ -41,6 +41,17 @@ save_prefix = ''
 data_workers = 4
 batch_size = 6
 
+
+"""Anchors"""
+# used to assign boxes to pyramid layers, corresponding to input size
+base_size = 256
+rpn_bg_threshold = 0.4
+rpn_fg_threshold = 0.6
+rpn_batch_size = 384
+rpn_fg_fraction = 0.25
+#
+rpn_clobber_positives = True
+
 """Anchor Output"""
 ANCHORS = []
 anchor_scales = [2, 4, 8, 16, 32]

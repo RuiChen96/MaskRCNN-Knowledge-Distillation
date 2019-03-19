@@ -17,6 +17,8 @@ from .focal_loss import FocalLoss, SigmoidCrossEntropy
 
 from .smooth_l1_loss import smooth_l1_loss
 
+from libs.layers.data_layer import compute_rpn_targets_in_batch
+
 import time
 
 
@@ -68,10 +70,31 @@ class MaskRCNN(detection_model):
     def forward(self, input, gt_boxes_list, anchors_np, rpn_targets=None):
 
         batch_size = input.size(0)
+        # torch.from_numpy() :
+        # The returned tensor and ndarray share the same memory.
+        anchors = torch.from_numpy(anchors_np).cuda()
+        endpoints = self.backbone(input)
 
+        # Currently No ZoomNet.
 
+        Ps = self.pyramid(endpoints)
+        rpn_outs = []
+        # f means "Floor" in Feature Pyramids.
+        for i, f in enumerate(Ps):
+            rpn_outs.append(self.rpn(f))
 
+        rpn_logit, rpn_box = self._rerange(rpn_outs, last_dimension=2)
+        rpn_prob = F.sigmoid(rpn_logit) if self.rpn_activation == 'sigmoid' \
+            else F.softmax(rpn_logit, dim=-1)
+        # This is different from "rpn_prob.detach()"
+        rpn_prob = rpn_prob.detach()
 
+        if self.is_training:
+            assert input.size(0) == len(gt_boxes_list), \
+                '{:d} vs {:d}'.format(input.size(0), len(gt_boxes_list))
+            if rpn_targets is None:
+                # TODO: compute_rpn_targets_in_batch()
+                rpn_targets = compute_rpn_targets_in_batch()
 
 
 
