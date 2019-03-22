@@ -17,6 +17,8 @@ from .focal_loss import FocalLoss, SigmoidCrossEntropy
 
 from .smooth_l1_loss import smooth_l1_loss
 
+from libs.layers.roi_align.pyramid_roi_align import PyramidRoIAlign2
+
 from libs.layers.data_layer import compute_rpn_targets_in_batch
 
 from libs.nets.utils import everything2cuda, everything2numpy
@@ -54,7 +56,7 @@ class MaskRCNN(detection_model):
                            num_channels=256, activation=self.rpn_activation)
 
         # TODO: Pyramid RoIAlign 2
-        self.pyramid_roi_align = []
+        self.pyramid_roi_align = PyramidRoIAlign2(7, 7)
 
         self.rcnn = RCNN(num_channels=num_channels, num_classes=num_classes, \
                          feat_height=7, feat_width=7, activation=self.activation)
@@ -117,14 +119,48 @@ class MaskRCNN(detection_model):
         # end if-else
 
         # TODO: pyramid_roi_align()
-        rcnn_feats = self.pyramid_roi_align()
+        rcnn_feats = self.pyramid_roi_align(Ps, rois, roi_img_ids)
+        rcnn_logit, rcnn_box = self.rcnn(rcnn_feats)
+        rcnn_prob = F.sigmoid(rcnn_logit) if self.activation == 'sigmoid' else F.softmax(rcnn_logit, dim=-1)
+        rcnn_prob = rcnn_prob.detach()
 
+        if self.is_training:
+            rcnn_labels, rcnn_bbtargets, rcnn_bbwghts = self.compute_rcnn_targets()
+            assert rcnn_labels.size(0) == rois.size(0) == roi_img_ids.size(0), \
+                'Dimension mismatch.'
+        else:
+            rcnn_labels = rcnn_bbtargets = rcnn_bbwghts = None
 
+        return rpn_logit, rpn_box, rpn_prob, rpn_labels, rpn_bbtargets, rpn_bbwghts, anchors, \
+               rois, roi_img_ids, rcnn_logit, rcnn_box, rcnn_prob, rcnn_labels, rcnn_bbtargets, rcnn_bbwghts
 
+    def compute_rcnn_targets(self, rois, img_ids, gt_boxes_list):
+        pass
 
+    def compute_anchor_targets(self, anchors, gt_boxes_list):
+        pass
 
+    def rcnn_cls_loss(self):
+        pass
 
+    def rcnn_box_loss(self):
+        pass
 
+    def get_final_results(self):
+        pass
 
+    def get_final_results_stage2(self):
+        pass
 
+    def build_losses_rcnn(self):
+        pass
+
+    def loss(self):
+        pass
+
+    def build_losses(self):
+        pass
+
+    def _decoding_and_thresholding_stage2(self):
+        pass
 

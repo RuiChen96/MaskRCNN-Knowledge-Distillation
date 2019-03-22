@@ -1,4 +1,4 @@
-# One-shot MaskRCNN with Knowledge Distillation
+# MaskRCNN with Knowledge Distillation (TBD)
 Mask RCNN with pytorch backend for pedestrian detection on Caltech dataset.
 
 ## Features

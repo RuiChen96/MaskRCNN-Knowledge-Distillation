@@ -43,10 +43,15 @@ class RCNN(nn.Module):
     def forward(self, pooled_features):
 
         x = pooled_features.view(pooled_features.size(0), -1)
+        # Region Distillation
+        region_feature = x
+
         x = self.trans(x)
+        # Logit Distillation
+        logit = x
 
         cls = self.cls_out(x)
         box = self.box_out(x)
 
-        return [cls, box]
+        return [cls, box, region_feature, logit]
 

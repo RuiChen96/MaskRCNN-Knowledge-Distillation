@@ -106,3 +106,9 @@ class detection_model(nn.Module):
 
         return selected_boxes, selected_probs, selected_img_ids, selected_anchors
 
+    def _decoding_and_thresholding_stage1(self):
+        pass
+    
+    def get_summaries(self, is_training=True):
+        pass
+

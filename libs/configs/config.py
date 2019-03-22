@@ -41,6 +41,17 @@ save_prefix = ''
 data_workers = 4
 batch_size = 6
 
+# using which layers
+strides = (8, 16, 32, 64, 128)
+f_keys = ['C3', 'C4', 'C5', 'C6', 'C7']
+in_channels = [512, 1024, 2048, 256, 256]
+
+num_channels = 256
+use_augment = False
+training_scale = [0.3, 0.5, 0.7, 1.0]
+
+# only for citypersons
+use_extend = False
 
 """Anchors"""
 # used to assign boxes to pyramid layers, corresponding to input size
