@@ -73,8 +73,16 @@ class detection_model(nn.Module):
         n = rpn_outs[0][0].size()[0]
         c = rpn_outs[0][0].size()[1]
         cb = rpn_outs[0][1].size()[1]
-        rpn_logit = []
-        rpn_box = []
+        #
+        rpn_logit = [rpn[0].view(n, c, -1) for rpn in rpn_outs]
+        rpn_box = [rpn[1].view(n, cb, -1) for rpn in rpn_outs]
+        #
+        rpn_logit = torch.cat(rpn_logit, dim=2)
+        rpn_box = torch.cat(rpn_box, dim=2)
+        #
+        rpn_logit = rpn_logit.permute(0, 2, 1).contiguous().view(-1, last_dimension)
+        num_endpoints = rpn_logit.size()[0]
+        rpn_box = rpn_box.permute(0, 2, 1).contiguous().view(num_endpoints, -1)
 
         return rpn_logit, rpn_box
 
@@ -108,7 +116,38 @@ class detection_model(nn.Module):
 
     def _decoding_and_thresholding_stage1(self):
         pass
-    
+
+    def get_final_results(self):
+        pass
+
+    def get_final_results_stage1(self):
+        pass
+
+    def get_pos_anchors(self):
+        pass
+
+    def _to_one_hot(self, y, num_classes):
+        c = num_classes + 1 if self.rpn_activation == 'sigmoid' else num_classes
+        y_ = torch.FloatTensor(y.size()[0], c).zero_()
+        y_ = y_.scatter_(1, y.view(-1, 1).data.cpu(), 1.0).cuda()
+        if self.rpn_activation == 'sigmoid':
+            y_ = y_[:, 1:]
+        if y.is_cuda:
+            y_ = y_.cuda()
+        return y_
+
+    def de_frozen_backbone(self):
+        self.backbone.de_frozen()
+
+    def _add_scalar_summary(self, key, tensor):
+        if isinstance(tensor, torch.Tensor):
+            return tbx.summary.scalar(key + '/L1', torch.abs(tensor).mean().data.cpu().numpy())
+        elif isinstance(tensor, float):
+            return tbx.summary.scalar(key, tensor)
+
+    def _add_hist_summary(self, key, tensor):
+        return tbx.summary.histogram(key, tensor.data.cpu().numpy(), bins='auto')
+
     def get_summaries(self, is_training=True):
         pass
 
