@@ -183,11 +183,69 @@ class detection_model(nn.Module):
             boxes_ = boxes[inds]
             # !!! Difference is here. !!!
             if probs_.ndim == 1 or probs_.shape[1] == 1:
-                cls_ids = np.ones()
+                cls_ids = np.ones((probs_.shape[0], ), dtype=np.int32)
+                cls_probs = probs_.view(-1)
+            else:
+                cls_ids = probs_.argmax(axis=1) + 1
+                cls_probs = probs_.max(axis=1)
+
+            dets = np.concatenate(
+                (boxes_.reshape(-1, 4),
+                 cls_probs[:, np.newaxis],
+                 cls_ids[:, np.newaxis]),
+                axis=1
+            )
+
+            Dets.append(dets)
+        # end_for
+        return Dets
 
     @staticmethod
-    def to_Dets2():
-        pass
+    def to_Dets2(boxes, probs, img_ids, score_threshold=0.1):
+        """
+        For each bbox, there may be more than one "class" labels.
+        """
+        boxes, probs, img_ids = everything2numpy([boxes, probs, img_ids])
+        Dets = list()
+
+        for i in range(0, cfg.batch_size):
+            inds = np.where(img_ids == i)[0]
+            probs_ = probs[inds]
+            boxes_ = boxes[inds]
+            if probs_.shape[1] == 2:
+                cls_ids = np.ones((probs_.shape[0], ), dtype=np.int32)
+                cls_probs = probs_[:, 1]
+                dets = np.concatenate(
+                    (boxes_.reshape(-1, 4),
+                     cls_probs[:, np.newaxis],
+                     cls_ids[:, np.newaxis]),
+                    axis=1
+                )
+            else:
+                d0_inds, d1_inds = np.where(probs_[:, 1:] > score_threshold)
+                if d0_inds.size > 0:
+                    cls_ids = d1_inds + 1
+                    cls_probs = probs_[d0_inds, cls_ids]
+                    boxes_ = boxes_[d0_inds, :]
+                    dets = np.concatenate(
+                        (boxes_.reshape(-1, 4),
+                         cls_probs[:, np.newaxis],
+                         cls_ids[:, np.newaxis]),
+                        axis=1
+                    )
+                else:
+                    cls_ids = probs_[:, 1:].argmax(axis=1) + 1
+                    cls_probs = probs_[np.arange(probs_.shape[0]), cls_ids]
+                    dets = np.concatenate(
+                        (boxes_.reshape(-1, 4),
+                         cls_probs[:, np.newaxis],
+                         cls_ids[:, np.newaxis]),
+                        axis=1
+                    )
+            # end if_else
+            Dets.append(dets)
+        # end_for
+        return Dets
 
     @staticmethod
     def to_Dets2_sigmoid():
@@ -196,8 +254,15 @@ class detection_model(nn.Module):
     def get_final_results(self):
         pass
 
-    def get_final_results_stage1(self):
-        pass
+    def get_final_results_stage1(self, rpn_box, rpn_prob, anchors, \
+                                 score_threshold=0.1, \
+                                 max_dets=100, \
+                                 overlap_threshold=0.5):
+
+        selected_boxes, selected_probs, selected_img_ids, selected_anchors = \
+            self._decoding_and_thresholding_stage1(rpn_box, rpn_prob, anchors, \
+                                                   score_threshold=score_threshold, \
+                                                   max_dets=max_dets * 3)
 
     def get_pos_anchors(self):
         pass
