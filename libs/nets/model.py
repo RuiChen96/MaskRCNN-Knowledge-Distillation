@@ -114,7 +114,83 @@ class detection_model(nn.Module):
 
         return selected_boxes, selected_probs, selected_img_ids, selected_anchors
 
-    def _decoding_and_thresholding_stage1(self):
+    def _decoding_and_thresholding_stage1(self, rpn_box, rpn_prob, anchors, \
+                                          score_threshold=0.3, max_dets=100):
+        selected_boxes, selected_probs, selected_img_ids, selected_anchors = \
+            self._decode_and_choose_top_n_stage1(rpn_box, rpn_prob, anchors, top_n=max_dets * 3)
+
+        objness = self._objectness(selected_probs)
+        inds = objness.data.ge(score_threshold).nonzero().view(-1)
+
+        if inds.numel() == 0:
+            _, inds = objness.sort(dim=0, descending=True)
+            inds = inds[:1]
+
+        selected_boxes = selected_boxes[inds]
+        selected_probs = selected_probs[inds]
+        selected_img_ids = selected_img_ids[inds]
+        selected_anchors = selected_anchors[inds]
+
+        return selected_boxes, selected_probs, selected_img_ids, selected_anchors
+
+    @staticmethod
+    def _apply_nms_in_batch():
+        pass
+
+    @staticmethod
+    def to_Dets(boxes, probs, img_ids):
+        """
+        For each bbox, assign it with "the class" of the max prob.
+        """
+        boxes, probs, img_ids = everything2numpy([boxes, probs, img_ids])
+        Dets = list()
+
+        for i in range(0, cfg.batch_size):
+            inds = np.where(img_ids == i)[0]
+            probs_ = probs[inds]
+            boxes_ = boxes[inds]
+            if probs_.shape[1] == 2:
+                cls_ids = np.ones((probs_.shape[0], ), dtype=np.int32)
+                cls_probs = probs_[:, 1]
+            else:
+                cls_ids = probs_[:, 1:].argmax(axis=1) + 1
+                cls_probs = probs_[np.arange(probs_.shape[0]), cls_ids]
+
+            dets = np.concatenate(
+                (boxes_.reshape(-1, 4),
+                 cls_probs[:, np.newaxis],
+                 cls_ids[:, np.newaxis]),
+                axis=1
+            )
+
+            Dets.append(dets)
+        # end_for
+        return Dets
+
+    @staticmethod
+    def to_Dets_sigmoid(boxes, probs, img_ids):
+        """
+        For each bbox, assign the class with the max prob.
+        NOTE: there is no background class,
+        so the implementation is slightly different.
+        """
+        boxes, probs, img_ids = everything2numpy([boxes, probs, img_ids])
+        Dets = list()
+
+        for i in range(0, cfg.batch_size):
+            inds = np.where(img_ids == i)[0]
+            probs_ = probs[inds]
+            boxes_ = boxes[inds]
+            # !!! Difference is here. !!!
+            if probs_.ndim == 1 or probs_.shape[1] == 1:
+                cls_ids = np.ones()
+
+    @staticmethod
+    def to_Dets2():
+        pass
+
+    @staticmethod
+    def to_Dets2_sigmoid():
         pass
 
     def get_final_results(self):
@@ -149,5 +225,24 @@ class detection_model(nn.Module):
         return tbx.summary.histogram(key, tensor.data.cpu().numpy(), bins='auto')
 
     def get_summaries(self, is_training=True):
-        pass
+        summaries = list()
+
+        for key, var in self._score_summaries.items():
+            # save scalar
+            summaries.append(self._add_scalar_summary(key, var))
+        # re-init dict
+        self._score_summaries = dict()
+        # Add act summaries
+        # for key, var in self._hist_summaries.items():
+        #     summaries.append(self._add_hist_summary(key, var))
+        self._hist_summaries = dict()
+        # Add train summaries
+        if is_training:
+            for key, var in dict(self.named_parameters()).items():
+                if var.requires_grad:
+                    # summaries.append(self._add_hist_summary(key, var))
+                    summaries.append(self._add_scalar_summary('Params/' + key, var))
+                    summaries.append(self._add_scalar_summary('Grads/' + key, var.grad))
+
+        return summaries
 
