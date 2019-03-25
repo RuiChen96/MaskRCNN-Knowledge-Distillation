@@ -56,10 +56,96 @@ class Conv2d(nn.Module):
         return x
 
 
+def everything2cuda(x, volatile=False):
+    if isinstance(x, np.ndarray):
+        # ndarray --> tensor --> cuda
+        return torch.from_numpy(x).cuda()
+    elif isinstance(x, torch.FloatTensor) or \
+            isinstance(x, torch.LongTensor) or \
+            isinstance(x, torch.IntTensor) or \
+            isinstance(x, torch.DoubleTensor):
+        return x.cuda()
+    elif isinstance(x, Variable):
+        return x.cuda()
+    elif isinstance(x, list) or isinstance(x, tuple):
+        y = list()
+        for i, e in enumerate(x):
+            y.append(everything2cuda(e))
+        # end_for
+        return y
+    else:
+        print('Unknown data type: ', type(x))
+        raise TypeError('Unknown data type, when converting to "CUDA".')
+
+
+def everything2tensor(x):
+    if isinstance(x, np.ndarray):
+        return torch.from_numpy(x)
+    if isinstance(x, Variable):
+        if x.is_cuda:
+            return x.cpu().data
+        return x.data
+    elif isinstance(x, list) or isinstance(x, tuple):
+        y = list()
+        for i, e in enumerate(x):
+            y.append(everything2tensor(e))
+        # end_for
+        return y
+    else:
+        print('Unknown data type: ', type(x))
+        raise TypeError('Unknown data type, when converting to "Torch.Tensor".')
+
+
 def everything2numpy(x):
+    if isinstance(x, torch.FloatTensor) or \
+            isinstance(x, torch.IntTensor) or \
+            isinstance(x, torch.DoubleTensor) or \
+            isinstance(x, torch.LongTensor):
+        return x.numpy().copy()
+    if isinstance(x, Variable):
+        if x.is_cuda:
+            return x.cpu().data.numpy()
+        return x.data.numpy()
+    elif isinstance(x, list) or isinstance(x, tuple):
+        y = list()
+        for i, e in enumerate(x):
+            y.append(tensor2numpy(e))
+        # end_for
+        return y
+    else:
+        print('Unknown data type: ', type(x))
+        raise TypeError('Unknown data type, when converting to "Numpy".')
+
+
+tensor2numpy = everything2numpy
+
+
+def everything2cpu(x):
+    if isinstance(x, np.ndarray):
+        # NOTE: !!! requires_grad == False !!!
+        return Variable(torch.from_numpy(x), requires_grad=False).cpu()
+    elif isinstance(x, Variable):
+        return x.cpu()
+    elif isinstance(x, list) or isinstance(x, tuple):
+        y = list()
+        for i, e in enumerate(x):
+            y.append(everything2cpu(e))
+        # end_for
+        return y
+    else:
+        print('Unknown data type: ', type(x))
+        raise TypeError('Unknown data type, when converting to "CPU Computing".')
+
+
+def adjust_learning_rate(optimizer, lr):
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
+
+
+def save_net():
     pass
 
 
-def everything2cuda(x, volatile=False):
+def load_net():
     pass
 

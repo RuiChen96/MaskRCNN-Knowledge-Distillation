@@ -32,13 +32,13 @@ class detection_model(nn.Module):
         self.is_training = is_training
         self.rpn_activation = cfg.class_activation
 
-        self.rpn_outs = []
-        self.loss_dict = []
+        self.rpn_outs = list()
+        self.loss_dict = list()
 
         self.with_segment = cfg.with_segment
 
-        self._score_summaries = {}
-        self._hist_summaries = {}
+        self._score_summaries = dict()
+        self._hist_summaries = dict()
         self.global_step = 0
         # Anchors must be set via running setup().
         self.anchors = None
@@ -134,8 +134,9 @@ class detection_model(nn.Module):
         return selected_boxes, selected_probs, selected_img_ids, selected_anchors
 
     @staticmethod
-    def _apply_nms_in_batch():
-        pass
+    def _apply_nms_in_batch(boxes, probs, img_ids, anchors, activation, overlap_threshold=0.5):
+        all_keeps = list()
+        return boxes[all_keeps], probs[all_keeps], img_ids[all_keeps], anchors[all_keeps]
 
     @staticmethod
     def to_Dets(boxes, probs, img_ids):
@@ -248,10 +249,49 @@ class detection_model(nn.Module):
         return Dets
 
     @staticmethod
-    def to_Dets2_sigmoid():
-        pass
+    def to_Dets2_sigmoid(boxes, probs, img_ids, score_threshold=0.1):
+        boxes, probs, img_ids = everything2numpy([boxes, probs, img_ids])
+        Dets = list()
+        for i in range(0, cfg.batch_size):
+            inds = np.where(img_ids == i)[0]
+            probs_ = probs[inds]
+            boxes_ = boxes[inds]
+            if probs_.ndim == 1 or probs_.shape[1] == 1:
+                cls_ids = np.ones((probs_.shape[0], ), dtype=np.int32)
+                cls_probs = probs_.view(-1)
+                dets = np.concatenate(
+                    (boxes_.reshape(-1, 4),
+                     cls_probs[:, np.newaxis],
+                     cls_ids[:, np.newaxis]),
+                    axis=1
+                )
+            else:
+                d0_inds, d1_inds = np.where(probs_ > score_threshold)
+                if d0_inds.size > 0:
+                    cls_ids = d1_inds + 1
+                    cls_probs = probs_[d0_inds, d1_inds]
+                    boxes_ = boxes_[d0_inds, :]
+                    dets = np.concatenate(
+                        (boxes_.reshape(-1, 4),
+                         cls_probs[:, np.newaxis],
+                         cls_ids[:, np.newaxis]),
+                        axis=1
+                    )
+                else:
+                    cls_ids = probs_.argmax(axis=1) + 1
+                    cls_probs = probs_[np.arange(probs_.shape[0]), cls_ids - 1]
+                    dets = np.concatenate(
+                        (boxes_.reshape(-1, 4),
+                         cls_probs[:, np.newaxis],
+                         cls_ids[:, np.newaxis]),
+                        axis=1
+                    )
+            # end if_else
+            Dets.append(dets)
+        # end_for
+        return Dets
 
-    def get_final_results(self):
+    def get_final_results(self, outputs, anchors, **kwargs):
         pass
 
     def get_final_results_stage1(self, rpn_box, rpn_prob, anchors, \
@@ -264,8 +304,35 @@ class detection_model(nn.Module):
                                                    score_threshold=score_threshold, \
                                                    max_dets=max_dets * 3)
 
-    def get_pos_anchors(self):
-        pass
+        selected_boxes, selected_probs, selected_img_ids, selected_anchors = \
+            self._apply_nms_in_batch(selected_boxes, selected_probs, \
+                                     selected_img_ids, selected_anchors, \
+                                     activation=self.rpn_activation, \
+                                     overlap_threshold=overlap_threshold)
+
+        if self.rpn_activation == 'softmax':
+            Dets = self.to_Dets2(selected_boxes, selected_probs, \
+                                 selected_img_ids, score_threshold)
+        elif self.rpn_activation == 'sigmoid':
+            Dets = self.to_Dets2_sigmoid(selected_boxes, selected_probs, \
+                                         selected_img_ids, score_threshold)
+        else:
+            raise ValueError('Unknown activation function {:s}'.format(self.rpn_activation))
+
+        return Dets
+
+    def get_pos_anchors(self, score_threshold=0.1, max_dets=100):
+        _, selected_probs, selected_img_ids, selected_anchors = \
+            self._decoding_and_thresholding_stage1(score_threshold=score_threshold, max_dets=max_dets)
+
+        if self.rpn_activation == 'softmax':
+            Dets = self.to_Dets(selected_anchors, selected_probs, selected_img_ids)
+        elif self.rpn_activation == 'sigmoid':
+            Dets = self.to_Dets_sigmoid(selected_anchors, selected_probs, selected_img_ids)
+        else:
+            raise ValueError('Unknown activation function {:s}'.format(self.rpn_activation))
+
+        return Dets
 
     def _to_one_hot(self, y, num_classes):
         c = num_classes + 1 if self.rpn_activation == 'sigmoid' else num_classes
