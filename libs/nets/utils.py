@@ -142,10 +142,53 @@ def adjust_learning_rate(optimizer, lr):
         param_group['lr'] = lr
 
 
-def save_net():
-    pass
+def save_net(file_name, net, epoch=-1, lr=-1., log=False):
+    with h5py.File(file_name, mode='w') as h5f:
+        for k, v in net.state_dict().items():
+            h5f.create_dataset(k, data=v.cpu().numpy())
+            if log:
+                print('{:s}, mean: {:.4f}, std: {:.4f}'.format(k, v.mean(), v.std()))
+                print('SAVE: {} {}'.format(k, v.size()))
+        # end_for
+
+        h5f.attrs['epoch'] = epoch
+        h5f.attrs['lr'] = lr
 
 
-def load_net():
-    pass
+def load_net(file_name, net, force=True, log=False):
+    with h5py.File(file_name, mode='r') as h5f:
+        # "loaded" is a flag for whether this layer has been loaded
+        # "loaded" is init with False
+        loaded = {k: False for k in h5f.keys()}
+        for k, v in net.state_dict.items():
+            if k not in h5f:
+                k = 'module.' + k
+            if k in h5f:
+                # flag = True
+                loaded[k] = True
+                param = torch.from_numpy(np.asarray(h5f[k]))
+                if v.size() == param.size():
+                    v.copy_(param)
+                    if log:
+                        print('{:s}, mean: {:.4f}, std: {:.4f}'.format(k, param.mean(), param.std()))
+                        print('LOAD: loaded {} {}'.format(k, v.size()))
+                elif force:
+                    # loading with force, directly ignore some layers
+                    print('LOAD: ignoring layer: {} {} vs {}'.format(k, param.size(), v.size()))
+                    # Return True if S starts with the specified prefix, False otherwise.
+                    # if k.startswith('rpns'):
+                    #     load_coco_cls_layer_to_detrac_sigmoid(param, v)
+                else:
+                    raise ValueError('LOAD: tensors sizes not match: {} vs {}'.format(param.size(), v.size()))
+            else:
+                print('LOAD: ignoring layer: {}'.format(k))
+        # end_for
+
+        epoch = h5f.attrs['epoch'] if 'epoch' in h5f.attrs else -1
+        lr = h5f.attrs['lr'] if 'lr' in h5f.attrs else -1.
+        for k in loaded.keys():
+            if not loaded[k]:
+                print('LOAD: **** {} has not been loaded. **** '.format(k))
+
+        return epoch, lr
 
