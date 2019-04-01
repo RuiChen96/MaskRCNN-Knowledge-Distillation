@@ -95,8 +95,40 @@ class detection_model(nn.Module):
     def _thresholding(self):
         pass
 
-    def build_losses_rpn(self):
+    def build_losses_rpn(self, rpn_logits, rpn_box, rpn_prob, \
+                         rpn_labels, rpn_bboxes, rpn_bbwghts):
+        """
+        With OHEM (Online Hard Example Mining)
+        """
+        # TODO:
+        rpn_cls_loss = []
+        rpn_box_loss = []
+
+        return rpn_cls_loss, rpn_box_loss
+
+    def build_losses_rpn_faster_rcnn(self, rpn_logits, rpn_box, rpn_prob, \
+                                     rpn_labels, rpn_bboxes, rpn_bbwghts):
+        """
+        Without OHEM (Online Hard Example Mining)
+        """
+        # TODO:
+        rpn_cls_loss = []
+        rpn_box_loss = []
+
+        return rpn_cls_loss, rpn_box_loss
+
+    def build_losses(self, outputs, targets):
         pass
+
+    def loss(self):
+        pass
+
+    def cls_loss(self):
+        # Treats RPN as a single-stage object detector.
+        return self.loss_dict['rpn_cls_loss']
+
+    def box_loss(self):
+        return self.loss_dict['rpn_box_loss']
 
     def _decode_and_choose_top_n_stage1(self, rpn_box, rpn_prob, anchors, top_n=1000):
 

@@ -141,10 +141,10 @@ class MaskRCNN(detection_model):
         pass
 
     def rcnn_cls_loss(self):
-        pass
+        return self.loss_dict['rcnn_cls_loss']
 
     def rcnn_box_loss(self):
-        pass
+        return self.loss_dict['rcnn_box_loss']
 
     def get_final_results(self):
         pass
@@ -152,14 +152,48 @@ class MaskRCNN(detection_model):
     def get_final_results_stage2(self):
         pass
 
-    def build_losses_rcnn(self):
-        pass
+    def build_losses_rcnn(self, rcnn_logit, rcnn_box, \
+                          rcnn_labels, rcnn_bbtargets, rcnn_bbwghts):
+        # TODO:
+        rcnn_cls_loss = []
+        rcnn_box_loss = []
 
-    def loss(self):
-        pass
+        return rcnn_cls_loss, rcnn_box_loss
 
-    def build_losses(self):
-        pass
+    def loss(self, loss_weights=None):
+        return self.loss_dict['rpn_cls_loss'] + self.loss_dict['rpn_box_loss'] + \
+               self.loss_dict['rcnn_cls_loss'] + self.loss_dict['rcnn_box_loss']
+
+    def build_losses(self, outputs, targets):
+
+        rois, roi_img_ids, rpn_logit, rpn_box, rpn_prob, \
+        rcnn_logit, rcnn_box, rcnn_prob, anchors = outputs
+
+        rpn_labels, rpn_bbtargets, rpn_bbwghts, \
+        rcnn_labels, rcnn_bbtargets, rcnn_bbwghts = targets
+
+        rpn_labels[rpn_labels > 1] = 1
+        if cfg.use_focal_loss:
+            rpn_cls_loss, rpn_box_loss = \
+                self.build_losses_rpn(rpn_logit, rpn_box, rpn_prob, \
+                                      rpn_labels, rpn_bbtargets, rpn_bbwghts)
+        else:
+            rpn_cls_loss, rpn_box_loss = \
+                self.build_losses_rpn_faster_rcnn(rpn_logit, rpn_box, rpn_prob, \
+                                                  rpn_labels, rpn_bbtargets, rpn_bbwghts)
+
+        rcnn_cls_loss, rcnn_box_loss = \
+            self.build_losses_rcnn(rcnn_logit, rcnn_box, \
+                                   rcnn_labels, rcnn_bbtargets, rcnn_bbwghts)
+
+        self.loss_dict = {
+            'rpn_cls_loss': rpn_cls_loss,
+            'rpn_box_loss': rpn_box_loss,
+            'rcnn_cls_loss': rcnn_cls_loss,
+            'rcnn_box_loss': rcnn_box_loss,
+        }
+
+        return self.loss_dict
 
     def _decoding_and_thresholding_stage2(self):
         pass
