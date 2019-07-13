@@ -436,6 +436,27 @@ class pascal_voc(imdb):
         return im, im_scale, annots, img_id
 
 
+def collate_fn(data):
+    pass
+
+
+def collate_fn_testing(data):
+    im_batch, im_scale_batch, anchors, _, _, _ = \
+        data_layer_keep_aspect_ratio_batch(data, is_training=False)
+
+
+def get_loader(data_dir, split, is_training, batch_size=16, shuffle=True, num_workers=4):
+
+    # init
+    split_, year = split.split('_')
+    dataset = pascal_voc(split_, year, is_training=is_training)
+
+    if is_training:
+        return sDataLoader(dataset, batch_size, shuffle, num_workers=num_workers, collate_fn=collate_fn)
+    else:
+        return sDataLoader(dataset, batch_size, shuffle, num_workers=num_workers, collate_fn=collate_fn_testing)
+
+
 if __name__ == '__main__':
     cfg.data_dir = './data/pascal_voc/'
     d = pascal_voc('trainval', '0712')

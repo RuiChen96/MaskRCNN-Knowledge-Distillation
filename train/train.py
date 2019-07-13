@@ -32,8 +32,9 @@ seed = 42
 torch.manual_seed(42)
 np.random.seed(42)
 
+
 def parse_args():
-    pass
+    parser = argparse
 
 def log_images(imgs, names, global_step, prefix='Image'):
     summary = []

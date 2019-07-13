@@ -84,6 +84,5 @@ anchor_shift = [[0.0, 0.0], ]
 """LOGs"""
 train_dir = './output'
 # support pascal_voc
-datasetname = 'coco'
+datasetname = 'pascal_voc'
 tensorboard = True
-
