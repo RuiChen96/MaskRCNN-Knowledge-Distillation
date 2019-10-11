@@ -43,3 +43,15 @@ sh exper/caltech/maskrcnn/train_test_resnet50_softmax.sh
 sh /exper/caltech/maskrcnn/train_test_resnet18_softmax.sh
 ```
 6. You may need to modify the .yaml file for your own training settings.
+
+## Reference
+```bash
+@inproceedings{chen2019learning,
+  title={Learning Lightweight Pedestrian Detector with Hierarchical Knowledge Distillation},
+  author={Chen, Rui and Ai, Haizhou and Shang, Chong and Chen, Long and Zhuang, Zijie},
+  booktitle={2019 IEEE International Conference on Image Processing (ICIP)},
+  pages={1645--1649},
+  year={2019},
+  organization={IEEE}
+}
+```
