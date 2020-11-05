@@ -1,4 +1,4 @@
-# MaskRCNN with Knowledge Distillation (TBD)
+# MaskRCNN with Knowledge Distillation
 Mask RCNN with pytorch backend for pedestrian detection on Caltech dataset.
 
 ## Features
@@ -47,11 +47,9 @@ sh /exper/caltech/maskrcnn/train_test_resnet18_softmax.sh
 ## Reference
 ```bash
 @inproceedings{chen2019learning,
-  title={Learning Lightweight Pedestrian Detector with Hierarchical Knowledge Distillation},
-  author={Chen, Rui and Ai, Haizhou and Shang, Chong and Chen, Long and Zhuang, Zijie},
-  booktitle={2019 IEEE International Conference on Image Processing (ICIP)},
-  pages={1645--1649},
-  year={2019},
-  organization={IEEE}
+    title   =   {Learning Lightweight Pedestrian Detector with Hierarchical Knowledge Distillation},
+    author  =   {Chen, Rui and Ai, Haizhou and Shang, Chong and Chen, Long and Zhuang, Zijie},
+    booktitle = {IEEE International Conference on Image Processing (ICIP)},
+    year    =   {2019}
 }
 ```
