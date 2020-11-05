@@ -64,4 +64,20 @@ class RetinaNet(detection_model):
         rpn_outs = []
         for i, f in enumerate(Ps):
             rpn_outs.append(self.rpn(f))
+        rpn_logit, rpn_box = self._rerange(rpn_outs)
+        rpn_prob = F.sigmoid(rpn_logit) if self.rpn_activation == 'sigmoid' else F.softmax(rpn_logit, dim=-1)
+        rpn_prob.detach()
 
+        if self.is_training:
+            if rpn_targets is None:
+                rpn_targets = compute_rpn_targets_in_batch(gt_boxes_list, anchors_np)
+                rpn_labels, _, rpn_bbtargets, rpn_bbwghts = everything2cuda(rpn_targets)
+            else:
+                rpn_labels, rpn_bbtargets, rpn_wghts = rpn_targets
+        else:
+            rpn_labels = rpn_bbtargets = rpn_bbwghts = None
+
+        return rpn_logit, rpn_box, rpn_prob, rpn_labels, rpn_bbtargets, rpn_bbwghts
+
+        def build_losses(self, outputs, targets):
+            pass
