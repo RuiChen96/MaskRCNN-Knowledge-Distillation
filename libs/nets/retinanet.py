@@ -73,11 +73,29 @@ class RetinaNet(detection_model):
                 rpn_targets = compute_rpn_targets_in_batch(gt_boxes_list, anchors_np)
                 rpn_labels, _, rpn_bbtargets, rpn_bbwghts = everything2cuda(rpn_targets)
             else:
-                rpn_labels, rpn_bbtargets, rpn_wghts = rpn_targets
+                rpn_labels, rpn_bbtargets, rpn_bbwghts = rpn_targets
         else:
             rpn_labels = rpn_bbtargets = rpn_bbwghts = None
 
         return rpn_logit, rpn_box, rpn_prob, rpn_labels, rpn_bbtargets, rpn_bbwghts
 
-        def build_losses(self, outputs, targets):
-            pass
+    def build_losses(self, outputs, targets):
+
+        rpn_logit, rpn_box, rpn_prob = outputs[:3]
+        rpn_labels, rpn_bbtargets, rpn_bbwghts = targets[:3]
+        rpn_cls_loss, rpn_box_loss = self.build_losses_rpn(rpn_logit, rpn_box, rpn_prob,
+                                                           rpn_labels, rpn_bbtargets, rpn_bbwghts)
+        self.loss_dict = {
+            'rpn_cls_loss': rpn_cls_loss, 'rpn_box_loss': rpn_box_loss,
+        }
+        return self.loss_dict
+
+    def loss(self, loss_weights=None):
+        return self.loss_dict['rpn_cls_loss'] + self.loss_dict['rpn_box_loss']
+
+    def get_final_results(self, outputs, anchors,
+                          score_threshold=0.1, max_dets=100, overlap_threshold=0.5):
+        rpn_logit, rpn_box, rpn_prob = outputs[:3]
+        Dets = self.get_final_results_stage1(rpn_box, rpn_prob, anchors,
+                                             score_threshold, max_dets, overlap_threshold)
+        return {'Stage1': Dets}
